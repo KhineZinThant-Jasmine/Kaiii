@@ -33,6 +33,7 @@ const App = () => {
   } 
   console.log(votes)
   console.log(selected)
+  
 
   return (
     <>
