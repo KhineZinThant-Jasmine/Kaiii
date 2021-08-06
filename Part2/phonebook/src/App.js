@@ -1,6 +1,7 @@
 import React , {useEffect, useState} from 'react'
 import axios from 'axios'
 import personService from './services/persons'
+import './index.css'
 
 
 const Filter =({searchValue, handleSearchValueChange}) => {
@@ -45,7 +46,19 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchValue, setSearchValue] =useState('')
-
+  const [noti, setNoti] =useState(null)
+ 
+  
+const Notification = ({message}) => {
+  if (message === null){
+    return null
+  }
+  return (
+    <div className={message.type === "success" ? "success" : "error"}>
+      {message.messages}
+    </div>
+  )
+}
 
   useEffect( () => {
     personService
@@ -78,10 +91,30 @@ const App = () => {
       personService
         .getAll().then((response) => {
           setPersons(response)
-          window.alert(`${newName} has been updated with a new number!!!`)
+          setNoti({
+            messages:`Person '${newName} has been updated with a new number!!!`,
+            type:"success"
+          }
+            
+          )
+          setTimeout(() => {
+            setNoti(null)
+          }, 5000)
         })
       )
+      .catch(error => {
+        setNoti({
+          messages:`the person '${newName}' was already deleted from server`,
+          type:'error'
+        }
+        )
+        setTimeout( ()=> {
+          setNoti(null)
+        },5000)
+        setPersons(persons.filter(n => n.id !== id))
+      })
     }
+
   }
 
   const handleSubmit = (event) => {
@@ -100,6 +133,14 @@ const App = () => {
           .then(returnedPerson => setPersons(persons.concat(returnedPerson)))
           setNewName("")
           setNewNumber("")
+          setNoti({
+            messages: `${newName} added to phonebook`,
+              type: "success"}
+          )
+          setTimeout(() => {
+            setNoti(null)
+          }, 5000)
+          
   }
 
   const filteredPerson = persons.filter((person) =>
@@ -111,13 +152,24 @@ const App = () => {
       .deletePerson(person.id)
         .then(() => personService.getAll().then((response) => {
           setPersons(response)
-          window.alert("Contact deleted!!!")
-          console.log(persons)
+          setNoti({
+            messages: `${person.name} was removed`,
+              type: "error"}
+          )
+          setTimeout(() => {
+            setNoti(null)
+          }, 5000)
       })
     )
-      .catch(err => {
-        console.log(err)
+    .catch(err => {
+      setNoti({
+        messages: `${person.name} has already been removed from server`,
+        type: "error"
       })
+      setTimeout(() => {
+        setNoti(null)
+      }, 5000)
+    })
   }
 
   
@@ -125,6 +177,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message = {noti}/>
       <div>
         filter shown with <Filter searchValue={searchValue} handleSearchValueChange={handleSearchValueChange} />
       </div>
